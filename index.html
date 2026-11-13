@@ -112,6 +112,32 @@
 
   <script>
     let settingsUnlocked = false;
+    const SETTINGS_KEY = 'tag_calc_settings_v1';
+
+    // Save clinical settings to localStorage
+    function saveSettings() {
+      const settings = {
+        ratio: document.getElementById('ratio').value,
+        isf: document.getElementById('isf').value,
+        targetBg: document.getElementById('targetBg').value
+      };
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    // Load clinical settings from localStorage on startup
+    function loadSettings() {
+      const saved = localStorage.getItem(SETTINGS_KEY);
+      if (saved) {
+        try {
+          const settings = JSON.parse(saved);
+          if (settings.ratio) document.getElementById('ratio').value = settings.ratio;
+          if (settings.isf) document.getElementById('isf').value = settings.isf;
+          if (settings.targetBg) document.getElementById('targetBg').value = settings.targetBg;
+        } catch (e) {
+          console.error("Could not parse saved settings", e);
+        }
+      }
+    }
 
     function toggleSettingsLock() {
       const btn = document.getElementById('toggleSettingsBtn');
@@ -131,6 +157,10 @@
           });
         }
       } else {
+        // Saving changes when locking back up
+        saveSettings();
+        calculate();
+
         settingsUnlocked = false;
         btn.innerHTML = "🔒 Unlock to Edit";
         btn.classList.remove('bg-amber-600', 'text-white');
@@ -180,8 +210,15 @@
       document.getElementById('dose2').innerText = splitDose.toFixed(2) + ' u';
     }
 
-    const inputs = ['ratio', 'isf', 'targetBg', 'currentBg', 'carbs', 'fat', 'protein'];
-    inputs.forEach(id => {
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSettings();
+      calculate();
+    });
+
+    // Attach input listeners for live calculation
+    const allInputs = ['ratio', 'isf', 'targetBg', 'currentBg', 'carbs', 'fat', 'protein'];
+    allInputs.forEach(id => {
       document.getElementById(id).addEventListener('input', calculate);
     });
   </script>
